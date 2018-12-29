@@ -1,7 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 
-// An AVL tree node
+// AVL ağaç düğümü için tanımlamaları yapıyoruz
 struct Node
 {
     int key;
@@ -10,18 +10,18 @@ struct Node
     int height;
 };
 
-// A utility function to get maximum of two integers
+// İki tam sayıdan maximumu almak için kullandığımız hazır fonk
 int max(int a, int b);
 
-// A utility function to get height of the tree
+// Ağacın yüksekliğini bulmak için
 int height(struct Node *N)
 {
     if (N == NULL)
         return 0;
-    return N->height;
+    return N->height; //aksi halde yüksekliği döndürür
 }
 
-// A utility function to get maximum of two integers
+//iki tamsayının maximumunu bulan fonk
 int max(int a, int b)
 {
     return (a > b)? a : b;
@@ -33,7 +33,7 @@ int max(int a, int b)
 struct Node* newNode(int key)
 {
     struct Node* node = (struct Node*)
-                        malloc(sizeof(struct Node));
+            malloc(sizeof(struct Node));
     node->key = key;
     node->left = NULL;
     node->right = NULL;
@@ -41,45 +41,44 @@ struct Node* newNode(int key)
     return(node);
 }
 
-// A utility function to right rotate subtree rooted with y
-// See the diagram given above.
+//alt ağacı sağa döndüren yardımcı fonk.
 struct Node *rightRotate(struct Node *y)
 {
     struct Node *x = y->left;
     struct Node *T2 = x->right;
 
-    // Perform rotation
+    //Döndürme yapmak için
     x->right = y;
     y->left = T2;
 
-    // Update heights
+    // Yüksekliği yeniden hesaplamak için
     y->height = max(height(y->left), height(y->right))+1;
     x->height = max(height(x->left), height(x->right))+1;
 
-    // Return new root
+    // yeni kökü return ediyoruz
     return x;
 }
 
-// A utility function to left rotate subtree rooted with x
-// See the diagram given above.
+// sola döndürmek için kullanılan yardımcı fonk.
 struct Node *leftRotate(struct Node *x)
 {
     struct Node *y = x->right;
     struct Node *T2 = y->left;
 
-    // Perform rotation
+    //döndürme yapar
     y->left = x;
     x->right = T2;
 
-    // Update heights
+    //yükseklikleri yeniden hesaplıyoruz
     x->height = max(height(x->left), height(x->right))+1;
     y->height = max(height(y->left), height(y->right))+1;
 
-    // Return new root
+    //yeni kök
     return y;
 }
 
-// Get Balance factor of node N
+//N düğümümünün denge faktörü
+//bu denge faktörüne göre döndürme ilemleri yaparız
 int getBalance(struct Node *N)
 {
     if (N == NULL)
@@ -89,7 +88,7 @@ int getBalance(struct Node *N)
 
 struct Node* insert(struct Node* node, int key)
 {
-    /* 1. Perform the normal BST rotation */
+    //1.BST kurallarına göre ekleme işlemi yaparız
     if (node == NULL)
         return(newNode(key));
 
@@ -97,146 +96,138 @@ struct Node* insert(struct Node* node, int key)
         node->left = insert(node->left, key);
     else if (key > node->key)
         node->right = insert(node->right, key);
-    else // Equal keys not allowed
+    else // eşitik durumunda herhangi bir ekleme yok,eklem yapılmıyor yani
         return node;
 
-    /* 2. Update height of this ancestor node */
-    node->height = 1 + max(height(node->left),
-                        height(node->right));
+    //2. atadüğümün yüksekliğini güncelemek için
+    node->height = 1 + max(height(node->left),height(node->right));
 
-    /* 3. Get the balance factor of this ancestor
-        node to check whether this node became
-        unbalanced */
+    /* 3. Ata düğümün dengesiz olup olmadığını
+     *  kontrol etmek için denge faktörünü alırız */
     int balance = getBalance(node);
 
-    // If this node becomes unbalanced, then there are 4 cases
+    // 4 tane dengesizlik durumu var bunların arasından hangisi olduğunun kontrolü için
 
-    // Left Left Case
+    // sol-sol durumu
     if (balance > 1 && key < node->left->key)
         return rightRotate(node);
 
-    // Right Right Case
+    // sağ-sağ durumu
     if (balance < -1 && key > node->right->key)
         return leftRotate(node);
 
-    // Left Right Case
+    // sol-sağ durumu
     if (balance > 1 && key > node->left->key)
     {
         node->left = leftRotate(node->left);
         return rightRotate(node);
     }
 
-    // Right Left Case
+    // sağ-sol durumu
     if (balance < -1 && key < node->right->key)
     {
         node->right = rightRotate(node->right);
         return leftRotate(node);
     }
 
-    /* return the (unchanged) node pointer */
+    /* değişmemiş düğüm işaretini döndürür */
     return node;
 }
 
-/* Given a non-empty binary search tree, return the
-node with minimum key value found in that tree.
-Note that the entire tree does not need to be
-searched. */
+// Boş olmayan bir ikili arama ağacı verildiğinde,bu ağaçta bulunan minimum anahtar değeri ile düğümü döndürür.
+//tüm ağacın aranmış olmasına gerek yok
+// Minumum değer aranır
 struct Node * minValueNode(struct Node* node)
 {
     struct Node* current = node;
 
-    /* loop down to find the leftmost leaf */
+    /* en soldaki yağrağı bulmak için aşağı doğru döngü*/
     while (current->left != NULL)
         current = current->left;
 
     return current;
 }
 
-// Recursive function to delete a node with given key
-// from subtree with given root. It returns root of
-// the modified subtree.
+//verilen kök ile alt ağaçtan verilen bir anahtar ile bir düğümü silmek için recurcive
+//fonksiyonu kullanacağız
+//değiştirilen alt ağacın kökü dödürülür
+
 struct Node* deleteNode(struct Node* root, int key)
 {
-    // STEP 1: PERFORM STANDARD BST DELETE
+    //standart BST silme işlemi
 
     if (root == NULL)
         return root;
 
-    // If the key to be deleted is smaller than the
-    // root's key, then it lies in left subtree
+    // Silinecek anahtar kökün anahtarından küçükse sol alt ağaçta yer alır.
     if ( key < root->key )
         root->left = deleteNode(root->left, key);
 
-    // If the key to be deleted is greater than the
-    // root's key, then it lies in right subtree
+    // Silinecek anahtar kökün anahtarından büyükse, o zaman sağ alt ağacın içinde bulunur.
     else if( key > root->key )
         root->right = deleteNode(root->right, key);
 
-    // if key is same as root's key, then This is
-    // the node to be deleted
+    // eğer anahtar kökün anahtarıyla aynı ise, o zaman Silinecek düğüm budur.
     else
     {
-        // node with only one child or no child
+        // sadece bir çocuğu olan veya hiç çocuğu olmayan düğüm
         if( (root->left == NULL) || (root->right == NULL) )
         {
             struct Node *temp = root->left ? root->left :
-                                            root->right;
+                    root->right;
 
-            // No child case
+            // çocuğu olmayan durum
             if (temp == NULL)
             {
                 temp = root;
                 root = NULL;
             }
-            else // One child case
-            *root = *temp; // Copy the contents of
-                            // the non-empty child
+            else // bir çocuk
+                *root = *temp; //boş olmayan çocuğun içeriğini kopyalar
             free(temp);
         }
         else
         {
-            // node with two children: Get the inorder
-            // successor (smallest in the right subtree)
+            // İki çocuklu düğüm: Ardışık miras al (sağ alt ağaçta en küçük)
             struct Node* temp = minValueNode(root->right);
 
-            // Copy the inorder successor's data to this node
+            // Inorder verilerini bu düğüme kopyalanır
             root->key = temp->key;
 
-            // Delete the inorder successor
+            //silinir varis
             root->right = deleteNode(root->right, temp->key);
         }
     }
 
-    // If the tree had only one node then return
+    // ağacın sadce bir düğümü varsa başa geri dön
     if (root == NULL)
-    return root;
+        return root;
 
-    // STEP 2: UPDATE HEIGHT OF THE CURRENT NODE
+    //mevcut düğümün yüksekliği güncellenir.
     root->height = 1 + max(height(root->left),
-                        height(root->right));
+                           height(root->right));
 
-    // STEP 3: GET THE BALANCE FACTOR OF THIS NODE (to
-    // check whether this node became unbalanced)
+    // bu düğümün denge faktörü alınır (bu düğümün dengesiz olup olmadığını kontrol etmek için)
     int balance = getBalance(root);
 
-    // If this node becomes unbalanced, then there are 4 cases
+    // bu düğüm dengesiz hale gelirse yine bilinen dör durum oluşur
 
-    // Left Left Case
+    // sol-sol durumu
     if (balance > 1 && getBalance(root->left) >= 0)
         return rightRotate(root);
 
-    // Left Right Case
+    // sol-sağ durumu
     if (balance > 1 && getBalance(root->left) < 0)
     {
         root->left = leftRotate(root->left);
         return rightRotate(root);
     }
 
-    // Right Right Case
+    // sağ-sağ durumu
     if (balance < -1 && getBalance(root->right) <= 0)
         return leftRotate(root);
 
-    // Right Left Case
+    // sağ-sol durumu
     if (balance < -1 && getBalance(root->right) > 0)
     {
         root->right = rightRotate(root->right);
@@ -246,9 +237,7 @@ struct Node* deleteNode(struct Node* root, int key)
     return root;
 }
 
-// A utility function to print preorder traversal of
-// the tree.
-// The function also prints height of every node
+// ağcımızı preorder olarak çıktı vermesini sağlar.
 void preOrder(struct Node *root)
 {
     if(root != NULL)
@@ -259,60 +248,62 @@ void preOrder(struct Node *root)
     }
 }
 
-/* Driver program to test above function*/
+
+
+
 int main()
 {
-struct Node *root = NULL;
-int s,adet,kokGir,DevamMi=1,secenek=0,silinecekSayi,ekSecenek;
+    struct Node *root = NULL;
+    int adet,kokGir,DevamMi=1,secenek=0,silinecekSayi,ekSecenek;
 
 
-while(DevamMi==1){
-    printf("\n\nLütfen İşlem Seçiniz: \n");
-    printf("[1] Ağaç Oluştur\n");
-    scanf("%d",&secenek);
+    while(DevamMi==1){
+        printf("\n\nLütfen İşlem Seçiniz: \n");
+        printf("[1] Ağaç Oluştur\n");
+        scanf("%d",&secenek);
 
-    if(secenek==1){
-        printf("Lütfen Eklenecek Düğüm Sayısını Giriniz: ");
-        scanf("%d",&adet);
+        if(secenek==1){
+            printf("Lütfen Eklenecek Düğüm Sayısını Giriniz: ");
+            scanf("%d",&adet);
             for(int i=1;i<adet+1;i++){
-                 printf("Kök değerini giriniz:");
-                 scanf("%d",&kokGir);
-                 root = insert(root,kokGir);
-             }
-           printf("Oluşturduğunuz ağaçta dengesizlikler döndürme işlemi ile düzeltilir: \nPreOrder Dizilimimiz:\n");
+                printf("Kök değerini giriniz:");
+                scanf("%d",&kokGir);
+                root = insert(root,kokGir);
+            }
+            printf("Oluşturduğunuz ağaçta dengesizlikler döndürme işlemi ile düzeltilir: \nPreOrder Dizilimimiz:\n");
             preOrder(root);
 
             printf("\n\nOluşturduğunuz ağaçta ek işlem yapmak için Birini seçiniz: \n[1] Ağaçtan Düğüm Sil\n[2] Ağaca Düğüm Ekle\n[3] Çıkış Yap\n");
             scanf("%d",&ekSecenek);
-          while(ekSecenek==1||ekSecenek==2){
-            if(ekSecenek==1){
+            while(ekSecenek==1||ekSecenek==2){
+                if(ekSecenek==1){
                     printf("Lütfen Silmek İstediğiniz Düğüm Numarasını Giriniz: ");
                     scanf("%d",&silinecekSayi);
 
                     root = deleteNode(root, silinecekSayi);
                     printf("\nSilmek istediğiniz sayıdan sonraki preorder ifade \n");
                     preOrder(root);
-            }else if(ekSecenek==2){
-                printf("Kök değerini giriniz:");
-                scanf("%d",&kokGir);
-                root = insert(root,kokGir);
-                printf("Ekleme sonrasındaki AVL ağacımızın preorder dizilimi;\n");
-                preOrder(root);
+                }else if(ekSecenek==2){
+                    printf("Kök değerini giriniz:");
+                    scanf("%d",&kokGir);
+                    root = insert(root,kokGir);
+                    printf("Ekleme sonrasındaki AVL ağacımızın preorder dizilimi;\n");
+                    preOrder(root);
+                }
+                printf("\n\nOluşturduğunuz ağaçta ek işlem yapmak için Birini seçiniz: \n[1] Ağaçtan Düğüm Sil\n[2] Ağaca Düğüm Ekle\n[3] Çıkış Yap\n");
+                scanf("%d",&ekSecenek);
             }
-            printf("\n\nOluşturduğunuz ağaçta ek işlem yapmak için Birini seçiniz: \n[1] Ağaçtan Düğüm Sil\n[2] Ağaca Düğüm Ekle\n[3] Çıkış Yap\n");
-            scanf("%d",&ekSecenek);
-          }
 
-    }
+        }
 
-//Yeni Bir döngü oluşturmak için
-printf("\n\nYeni ağaç için         [1]'e \n"
-           "Tamamen Çıkmak için    [0]'a basınız");
-scanf("%d",&DevamMi);
+        //Yeni Bir döngü oluşturmak için
+        printf("\n\nYeni ağaç için         [1]'e \n"
+               "Tamamen Çıkmak için    [0]'a basınız");
+        scanf("%d",&DevamMi);
 
-root=NULL;
+        root=NULL;
 
-}//while döngü sonu
+    }//while döngü sonu
 
 
     return 0;
